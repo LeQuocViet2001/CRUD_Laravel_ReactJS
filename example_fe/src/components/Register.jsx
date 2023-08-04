@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Link, useNavigate, useNavigation } from "react-router-dom";
 
 export default function Register() {
   const [account, setAccount] = useState({
@@ -7,6 +7,16 @@ export default function Register() {
     email: "",
     password: "",
   });
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (localStorage.getItem("user-info")) {
+      navigate("/");
+    }
+  }, []);
+
+  const history = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -17,18 +27,32 @@ export default function Register() {
   };
 
   async function handleSubmit() {
-    // Gửi dữ liệu userData lên API
-    console.log(account);
-    let result = fetch("http://127.0.0.1:8000/api/v1/register", {
-      method: "POST",
-      body: JSON.stringify(account),
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-    });
+    try {
+      const response = await fetch("http://127.0.0.1:8000/api/v1/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(account),
+      });
 
-    result = await result.json();
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+
+      const data = await response.json();
+      // Xử lý dữ liệu
+      console.log(data);
+
+      // Lưu dữ liệu vào localStorage
+      localStorage.setItem("user-info", JSON.stringify(data));
+
+      history("/login");
+    } catch (error) {
+      // Xử lý lỗi
+      console.error("Error fetching data:", error);
+    }
   }
 
   return (
